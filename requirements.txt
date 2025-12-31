@@ -1,0 +1,17 @@
+# YOLOv8 ONNX & TensorRT Requirements
+
+# Core dependencies
+ultralytics>=8.0.0
+onnx>=1.14.0
+onnxruntime-gpu>=1.16.0  # Use onnxruntime for CPU-only
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# TensorRT (GPU only - requires CUDA and cuDNN)
+# Install TensorRT separately: pip install tensorrt
+# For Windows: Download from NVIDIA and install manually
+# pycuda>=2022.1  # Uncomment if using TensorRT
+
+# Visualization
+matplotlib>=3.7.0

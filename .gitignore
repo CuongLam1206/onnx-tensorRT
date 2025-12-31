@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Model files (lớn, không nên push lên GitHub)
+*.pt
+*.onnx
+*.engine
+*.trt
+*.plan
+
+# Images (có thể thêm lại nếu cần)
+images/*
+!images/.gitkeep
+!images/sample/
+
+# Models directory
+models/*
+!models/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Temporary files
+*.tmp
+temp/
