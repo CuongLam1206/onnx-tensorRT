@@ -78,12 +78,24 @@ def run_tensorrt_inference_benchmark(engine_path: str,
     
     context = engine.create_execution_context()
     
-    # Allocate buffers
-    input_shape = engine.get_binding_shape(0)
-    output_shape = engine.get_binding_shape(1)
+    # Allocate buffers - TensorRT 10.x API
+    # Get tensor names
+    input_name = engine.get_tensor_name(0)
+    output_name = engine.get_tensor_name(1)
     
-    h_input = cuda.pagelocked_empty(trt.volume(input_shape), dtype=np.float32)
-    h_output = cuda.pagelocked_empty(trt.volume(output_shape), dtype=np.float32)
+    # Get tensor shapes
+    input_shape = engine.get_tensor_shape(input_name)
+    output_shape = engine.get_tensor_shape(output_name)
+    
+    # Calculate volume
+    def volume(shape):
+        vol = 1
+        for dim in shape:
+            vol *= dim
+        return vol
+    
+    h_input = cuda.pagelocked_empty(volume(input_shape), dtype=np.float32)
+    h_output = cuda.pagelocked_empty(volume(output_shape), dtype=np.float32)
     
     d_input = cuda.mem_alloc(h_input.nbytes)
     d_output = cuda.mem_alloc(h_output.nbytes)
@@ -93,10 +105,14 @@ def run_tensorrt_inference_benchmark(engine_path: str,
     # Prepare input
     np.copyto(h_input, preprocessed_img.ravel())
     
+    # Set tensor addresses for TensorRT 10.x
+    context.set_tensor_address(input_name, int(d_input))
+    context.set_tensor_address(output_name, int(d_output))
+    
     # Warmup
     for _ in range(10):
         cuda.memcpy_htod_async(d_input, h_input, stream)
-        context.execute_async_v2(bindings=[int(d_input), int(d_output)], stream_handle=stream.handle)
+        context.execute_async_v3(stream_handle=stream.handle)
         cuda.memcpy_dtoh_async(h_output, d_output, stream)
         stream.synchronize()
     
@@ -104,7 +120,7 @@ def run_tensorrt_inference_benchmark(engine_path: str,
     start_time = time.time()
     for _ in range(num_iterations):
         cuda.memcpy_htod_async(d_input, h_input, stream)
-        context.execute_async_v2(bindings=[int(d_input), int(d_output)], stream_handle=stream.handle)
+        context.execute_async_v3(stream_handle=stream.handle)
         cuda.memcpy_dtoh_async(h_output, d_output, stream)
         stream.synchronize()
     end_time = time.time()
@@ -192,7 +208,20 @@ def main():
     # Đường dẫn
     onnx_path = "yolov8n.onnx"
     tensorrt_path = "yolov8n_fp16.engine"
-    image_path = "images/sample.jpg"
+    # Try multiple possible image paths
+    possible_paths = [
+        "images/sample.jpg",
+        "images/sample/sample.jpeg",
+        "images/sample.jpeg"
+    ]
+    image_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            image_path = path
+            break
+    
+    if image_path is None:
+        image_path = "images/sample.jpg"  # Default for error message
     
     # Kiểm tra files
     if not os.path.exists(onnx_path):
