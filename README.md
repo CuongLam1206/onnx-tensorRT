@@ -210,32 +210,36 @@ python demo.py
 
 ### Kết quả thực tế trên NVIDIA RTX 4050
 
-Benchmark với YOLOv8n, input size 640x640:
+Benchmark với YOLOv8n, input size 640x640 (GPU vs GPU):
 
 | Framework | Device | Precision | Inference Time | FPS | Speedup |
 |-----------|--------|-----------|----------------|-----|---------|
-| ONNX Runtime | CPU | FP32 | 44.20 ms | 22.62 | 1x (baseline) |
-| TensorRT | GPU (RTX 4050) | FP16 | 3.25 ms | 308.16 | **13.62x** 🚀 |
+| ONNX Runtime | GPU (RTX 4050) | FP32 | 7.90 ms | 126.57 | 1x (baseline) |
+| TensorRT | GPU (RTX 4050) | FP16 | 2.27 ms | 439.72 | **3.47x** 🚀 |
 
 ### Chi tiết kết quả:
 
-**ONNX Runtime (CPU):**
-- ⏱️ Thời gian: 44.20 ms
-- 📊 FPS: 22.62
+**ONNX Runtime (GPU RTX 4050 với CUDA 12.x):**
+- ⏱️ Thời gian: 7.90 ms
+- 📊 FPS: 126.57
 - 🎯 Detections: 2 objects
-- ⚠️ Lưu ý: Chạy trên CPU do thiếu CUDA dependencies
+- ✅ Chạy trên GPU với CUDA ExecutionProvider
 
 **TensorRT (GPU RTX 4050):**
-- ⚡ Thời gian: 3.25 ms
-- 🚀 FPS: 308.16
+- ⚡ Thời gian: 2.27 ms
+- 🚀 FPS: 439.72 (gần 440 FPS!)
 - 🎯 Detections: 2 objects
-- 💚 Tiết kiệm thời gian: 92.7%
+- 💚 Tiết kiệm thời gian: 71.2%
 
-**Speedup:** TensorRT nhanh hơn **13.62 lần** so với ONNX Runtime trên CPU!
+### So sánh tổng quan:
+
+**TensorRT vs ONNX Runtime (GPU):** Nhanh hơn **3.47x**  
+**TensorRT vs CPU:** Nhanh hơn **~16x** (440 FPS vs 27 FPS)  
+**ONNX GPU vs CPU:** Nhanh hơn **~4.7x** (127 FPS vs 27 FPS)
 
 **Lưu ý:** 
-- Kết quả trên dựa trên GPU RTX 4050
-- ONNX Runtime có thể nhanh hơn nhiều nếu chạy trên GPU với CUDA
+- Cần cài CUDA Toolkit 12.x để ONNX Runtime chạy trên GPU
+- TensorRT tối ưu hơn cho inference trên NVIDIA GPU
 - Hiệu suất phụ thuộc vào GPU, model size, input size
 
 ### Ưu điểm từng framework:
